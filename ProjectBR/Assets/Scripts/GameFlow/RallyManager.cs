@@ -108,7 +108,7 @@ namespace BomberRally
             }
         }
 
-        private void OnHitRequested(RallyCharacter character)
+        private void OnHitRequested(RallyCharacter character, HitDirection direction)
         {
             if (state != State.Flying || character != target) return;
             if (Time.time < character.LockedUntil) return;
@@ -128,21 +128,21 @@ namespace BomberRally
             lastJudgement = $"{character.DisplayName}: {(result == HitResult.Perfect ? "スマッシュ!" : "ナイス")}";
             character.PlayHit(result == HitResult.Perfect);
 
-            SendBomb(character, flightTime);
+            SendBomb(character, flightTime, direction);
         }
 
-        private void SendBomb(RallyCharacter from, float flightTime)
+        private void SendBomb(RallyCharacter from, float flightTime, HitDirection direction = HitDirection.None)
         {
             holder = from;
-            target = PickRandom(AliveCharacters(exclude: from));
+            target = PickTarget(from, direction);
             if (target == null)
             {
                 EndGame(from);
                 return;
             }
 
-            from.FaceTowards(target.transform.position);
-            target.FaceTowards(from.transform.position);
+            from.ReleaseStance();
+            target.TakeStance(from.transform.position);
             bomb.Launch(from.HitPoint, target.HitPoint, flightTime);
             target.Controller.OnBombIncoming(bomb.ArrivalTime, hitWindow);
             SetState(State.Flying, 0f);
@@ -174,6 +174,17 @@ namespace BomberRally
         {
             state = next;
             stateTimer = Time.time + delay;
+        }
+
+        /// <summary>指定方向の相手。方向指定なし・その相手が脱落済みならランダム。</summary>
+        private RallyCharacter PickTarget(RallyCharacter from, HitDirection direction)
+        {
+            int slot = DiamondFormation.GetSlotInDirection(from.Index, direction);
+            if (slot >= 0 && slot < characters.Length && characters[slot].IsAlive && characters[slot] != from)
+            {
+                return characters[slot];
+            }
+            return PickRandom(AliveCharacters(exclude: from));
         }
 
         private List<RallyCharacter> AliveCharacters(RallyCharacter exclude = null)
