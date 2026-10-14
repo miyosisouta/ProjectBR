@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -12,6 +13,10 @@ namespace BomberRally.EditorTools
     public static class RallyPrototypeSceneBuilder
     {
         private const string ScenePath = "Assets/Scenes/RallyPrototype.unity";
+        private const string HeroPrefab = "Assets/Prefabs/Character/Hero/FemaleCharacterPBR.prefab";
+        private const string SwordPrefab = "Assets/Prefabs/Character/Hero/OHS06PBR.prefab";
+        private const string ShieldPrefab = "Assets/Prefabs/Character/Hero/Shield05PBR.prefab";
+        private const string SlimePrefab = "Assets/Prefabs/Character/Slime/SlimePBR.prefab";
 
         private static readonly Color[] PlayerColors =
         {
@@ -44,10 +49,16 @@ namespace BomberRally.EditorTools
 
             var formation = new GameObject("DiamondFormation").AddComponent<DiamondFormation>();
 
+            var heroController = RallyAnimatorBuilder.Build(RallyAnimatorBuilder.Hero);
+            var slimeController = RallyAnimatorBuilder.Build(RallyAnimatorBuilder.Slime);
+
+            // P1（人間）は Hero、CPU は Slime
             var characters = new RallyCharacter[4];
             for (int i = 0; i < characters.Length; i++)
             {
-                characters[i] = CreateCharacter(i);
+                characters[i] = i == 0
+                    ? CreateCharacter(i, HeroPrefab, heroController, true)
+                    : CreateCharacter(i, SlimePrefab, slimeController, false);
             }
 
             var bomb = CreateBomb();
@@ -70,23 +81,47 @@ namespace BomberRally.EditorTools
             Debug.Log($"{ScenePath} を作成しました。再生して Space で打ち返し（P1 が手前）。");
         }
 
-        private static RallyCharacter CreateCharacter(int index)
+        private static RallyCharacter CreateCharacter(int index, string prefabPath, RuntimeAnimatorController controller, bool isHero)
         {
             var root = new GameObject($"P{index + 1}");
 
-            var body = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            body.name = "Body";
-            body.transform.SetParent(root.transform, false);
-            body.transform.localPosition = new Vector3(0f, 1f, 0f);
-            SetColor(body, PlayerColors[index]);
+            // 足元にプレイヤーカラーの輪を置いて見分ける
+            var ring = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            ring.name = "PlayerRing";
+            Object.DestroyImmediate(ring.GetComponent<Collider>());
+            ring.transform.SetParent(root.transform, false);
+            ring.transform.localScale = new Vector3(1.4f, 0.02f, 1.4f);
+            ring.transform.localPosition = new Vector3(0f, 0.01f, 0f);
+            SetColor(ring, PlayerColors[index]);
 
-            // 向きが分かるように正面に目印を付ける
-            var nose = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            nose.name = "Front";
-            nose.transform.SetParent(root.transform, false);
-            nose.transform.localPosition = new Vector3(0f, 1.4f, 0.5f);
-            nose.transform.localScale = new Vector3(0.3f, 0.2f, 0.3f);
-            SetColor(nose, Color.white);
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            if (prefab != null && controller != null)
+            {
+                var model = (GameObject)PrefabUtility.InstantiatePrefab(prefab, root.transform);
+                model.name = "Model";
+                model.transform.localPosition = Vector3.zero;
+                model.transform.localRotation = Quaternion.identity;
+
+                var animator = model.GetComponentInChildren<Animator>();
+                animator.runtimeAnimatorController = controller;
+                animator.applyRootMotion = false;
+
+                if (isHero)
+                {
+                    AttachToBone(model.transform, "weapon_r", SwordPrefab);
+                    AttachToBone(model.transform, "weapon_l", ShieldPrefab);
+                }
+
+                var anim = root.AddComponent<CharacterAnimator>();
+                var aso = new SerializedObject(anim);
+                aso.FindProperty("animator").objectReferenceValue = animator;
+                aso.ApplyModifiedPropertiesWithoutUndo();
+            }
+            else
+            {
+                Debug.LogWarning($"{prefabPath} またはアニメーションが見つからないため仮モデルで作ります");
+                CreatePlaceholderBody(root, index);
+            }
 
             var character = root.AddComponent<RallyCharacter>();
             var so = new SerializedObject(character);
@@ -106,6 +141,34 @@ namespace BomberRally.EditorTools
                 root.AddComponent<CpuHitController>();
             }
             return character;
+        }
+
+        private static void AttachToBone(Transform model, string boneName, string prefabPath)
+        {
+            var bone = model.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == boneName);
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            if (bone == null || prefab == null) return;
+
+            var item = (GameObject)PrefabUtility.InstantiatePrefab(prefab, bone);
+            item.transform.localPosition = Vector3.zero;
+            item.transform.localRotation = Quaternion.identity;
+        }
+
+        private static void CreatePlaceholderBody(GameObject root, int index)
+        {
+            var body = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            body.name = "Body";
+            body.transform.SetParent(root.transform, false);
+            body.transform.localPosition = new Vector3(0f, 1f, 0f);
+            SetColor(body, PlayerColors[index]);
+
+            // 向きが分かるように正面に目印を付ける
+            var nose = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            nose.name = "Front";
+            nose.transform.SetParent(root.transform, false);
+            nose.transform.localPosition = new Vector3(0f, 1.4f, 0.5f);
+            nose.transform.localScale = new Vector3(0.3f, 0.2f, 0.3f);
+            SetColor(nose, Color.white);
         }
 
         private static Bomb CreateBomb()

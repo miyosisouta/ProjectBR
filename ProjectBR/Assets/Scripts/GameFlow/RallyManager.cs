@@ -126,6 +126,7 @@ namespace BomberRally
             float flightTime = currentFlightTime;
             if (result == HitResult.Perfect) flightTime = Mathf.Max(minFlightTime, flightTime * smashMultiplier);
             lastJudgement = $"{character.DisplayName}: {(result == HitResult.Perfect ? "スマッシュ!" : "ナイス")}";
+            character.PlayHit(result == HitResult.Perfect);
 
             SendBomb(character, flightTime);
         }
@@ -165,6 +166,7 @@ namespace BomberRally
         private void EndGame(RallyCharacter champion)
         {
             winner = champion;
+            if (champion != null) champion.PlayVictory();
             SetState(State.GameOver, 0f);
         }
 
