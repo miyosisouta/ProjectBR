@@ -16,6 +16,7 @@ namespace BomberRally
         public int Index { get; private set; }
         public bool IsAlive { get; private set; } = true;
         public IHitController Controller { get; private set; }
+        public CharacterAnimator Animator { get; private set; }
         public Vector3 HitPoint => transform.position + Vector3.up * hitPointHeight;
 
         /// <summary>空振りなどで入力を受け付けない時間の終わり</summary>
@@ -26,6 +27,7 @@ namespace BomberRally
         public void Setup(int index)
         {
             Index = index;
+            Animator = GetComponent<CharacterAnimator>();
             Controller = GetComponent<IHitController>();
             if (Controller == null)
             {
@@ -45,10 +47,22 @@ namespace BomberRally
             if (dir.sqrMagnitude > 0.0001f) transform.rotation = Quaternion.LookRotation(dir);
         }
 
+        public void PlayHit(bool smash)
+        {
+            if (Animator != null) Animator.PlayHit(smash);
+        }
+
+        public void PlayVictory()
+        {
+            if (Animator != null) Animator.PlayVictory();
+        }
+
         public void Eliminate()
         {
             IsAlive = false;
-            gameObject.SetActive(false);
+            // モーションがなければ仮モデルなので消す
+            if (Animator != null) Animator.PlayDie();
+            else gameObject.SetActive(false);
         }
 
         public void ResetForRound()
@@ -57,6 +71,7 @@ namespace BomberRally
             LockedUntil = 0f;
             gameObject.SetActive(true);
             Controller?.ResetState();
+            if (Animator != null) Animator.PlayIdle();
         }
     }
 }
