@@ -29,7 +29,7 @@ namespace BomberRally
                 var c = characters[i];
                 if (c == null) continue;
                 c.transform.position = GetSlotPosition(i);
-                c.FaceTowards(transform.position);
+                c.SetHome(transform.position);
             }
         }
 

@@ -141,8 +141,8 @@ namespace BomberRally
                 return;
             }
 
-            from.FaceTowards(target.transform.position);
-            target.FaceTowards(from.transform.position);
+            from.ReleaseStance();
+            target.TakeStance(from.transform.position);
             bomb.Launch(from.HitPoint, target.HitPoint, flightTime);
             target.Controller.OnBombIncoming(bomb.ArrivalTime, hitWindow);
             SetState(State.Flying, 0f);
