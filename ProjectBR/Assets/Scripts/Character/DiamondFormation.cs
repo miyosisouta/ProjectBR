@@ -22,6 +22,22 @@ namespace BomberRally
             return transform.position + transform.rotation * Directions[index % Directions.Length] * radius;
         }
 
+        /// <summary>
+        /// index の位置から見て direction 側にいる相手の位置番号。
+        /// 全員が中央を向いているので、右隣は時計回りに 1 つ先・左隣は 1 つ前・前は向かい。
+        /// </summary>
+        public static int GetSlotInDirection(int index, HitDirection direction)
+        {
+            int count = Directions.Length;
+            switch (direction)
+            {
+                case HitDirection.Right: return (index + 1) % count;
+                case HitDirection.Forward: return (index + 2) % count;
+                case HitDirection.Left: return (index + count - 1) % count;
+                default: return -1;
+            }
+        }
+
         public void Arrange(RallyCharacter[] characters)
         {
             for (int i = 0; i < characters.Length; i++)

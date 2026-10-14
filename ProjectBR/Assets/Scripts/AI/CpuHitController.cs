@@ -39,7 +39,8 @@ namespace BomberRally
             if (Time.time < scheduledPressTime) return;
 
             scheduledPressTime = -1f;
-            owner.RequestHit();
+            // 狙いは今のところランダム（脱落済みの方向なら RallyManager がランダムに振り直す）
+            owner.RequestHit((HitDirection)Random.Range((int)HitDirection.Forward, (int)HitDirection.Right + 1));
         }
     }
 }

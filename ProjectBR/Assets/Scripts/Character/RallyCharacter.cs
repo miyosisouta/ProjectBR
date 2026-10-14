@@ -44,7 +44,7 @@ namespace BomberRally
         /// <summary>空振りなどで入力を受け付けない時間の終わり</summary>
         public float LockedUntil { get; set; }
 
-        public event Action<RallyCharacter> HitRequested;
+        public event Action<RallyCharacter, HitDirection> HitRequested;
 
         public void Setup(int index)
         {
@@ -59,7 +59,7 @@ namespace BomberRally
             Controller.Initialize(this);
         }
 
-        public void RequestHit() => HitRequested?.Invoke(this);
+        public void RequestHit(HitDirection direction) => HitRequested?.Invoke(this, direction);
 
         /// <summary>立ち位置で正面とする方向（ふつうはステージ中央）を決め、すぐにその向きにする。</summary>
         public void SetHome(Vector3 lookAt)
