@@ -13,6 +13,7 @@ namespace BomberRally
         private static Material softDot;
         private static Material ring;
         private static Material softLine;
+        private static Material smoke;
 
         /// <summary>中心が明るく外に向かって消える丸（火花・閃光用）</summary>
         public static Material SoftDot => softDot != null ? softDot : softDot = CreateAdditive(CreateTexture("SoftDot", (u, v) =>
@@ -32,6 +33,15 @@ namespace BomberRally
         public static Material SoftLine => softLine != null ? softLine : softLine = CreateAdditive(CreateTexture("SoftLine", (u, v) =>
         {
             return Mathf.Pow(Mathf.Clamp01(1f - Mathf.Abs(v)), 1.5f);
+        }));
+
+        /// <summary>ふちがでこぼこした煙の塊（爆発の煙用）。暗い色を重ねたいので加算ではなく半透明。</summary>
+        public static Material Smoke => smoke != null ? smoke : smoke = CreateAlphaBlended(CreateTexture("Smoke", (u, v) =>
+        {
+            float r = Mathf.Sqrt(u * u + v * v);
+            float noise = Mathf.PerlinNoise(u * 2.5f + 7.3f, v * 2.5f + 3.1f);
+            float edge = 1f - r + (noise - 0.5f) * 0.6f;
+            return Mathf.SmoothStep(0f, 0.45f, edge) * (0.55f + 0.45f * noise);
         }));
 
         /// <summary>白地に透明度だけ描いたテクスチャ。uv は -1〜1。</summary>
@@ -64,19 +74,25 @@ namespace BomberRally
         /// URP の Particles/Unlit を加算合成にしたマテリアル。
         /// ビルドでシェーダーが見つからないときは Sprites/Default（半透明）で代用する。
         /// </summary>
-        private static Material CreateAdditive(Texture texture)
+        private static Material CreateAdditive(Texture texture) => CreateTransparent(texture, true);
+
+        /// <summary>CreateAdditive の半透明版。</summary>
+        private static Material CreateAlphaBlended(Texture texture) => CreateTransparent(texture, false);
+
+        private static Material CreateTransparent(Texture texture, bool additive)
         {
             var shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
             if (shader == null) return new Material(Shader.Find("Sprites/Default")) { mainTexture = texture };
 
-            var mat = new Material(shader) { name = $"Additive_{texture.name}" };
+            var dst = additive ? BlendMode.One : BlendMode.OneMinusSrcAlpha;
+            var mat = new Material(shader) { name = $"{(additive ? "Additive" : "Alpha")}_{texture.name}" };
             mat.SetTexture("_BaseMap", texture);
             mat.SetFloat("_Surface", 1f);
-            mat.SetFloat("_Blend", 2f);
+            mat.SetFloat("_Blend", additive ? 2f : 0f);
             mat.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha);
-            mat.SetFloat("_DstBlend", (float)BlendMode.One);
+            mat.SetFloat("_DstBlend", (float)dst);
             mat.SetFloat("_SrcBlendAlpha", (float)BlendMode.One);
-            mat.SetFloat("_DstBlendAlpha", (float)BlendMode.One);
+            mat.SetFloat("_DstBlendAlpha", (float)dst);
             mat.SetFloat("_ZWrite", 0f);
             mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
             mat.SetOverrideTag("RenderType", "Transparent");

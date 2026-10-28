@@ -24,6 +24,8 @@ namespace BomberRally
         [SerializeField] private Bomb bomb;
         [Tooltip("未設定なら同じ GameObject に付ける")]
         [SerializeField] private HitEffect hitEffect;
+        [Tooltip("未設定なら同じ GameObject に付ける")]
+        [SerializeField] private ExplosionEffect explosionEffect;
 
         [Header("判定")]
         [SerializeField] private HitWindow hitWindow = HitWindow.Default;
@@ -55,6 +57,8 @@ namespace BomberRally
         {
             if (hitEffect == null) hitEffect = GetComponent<HitEffect>();
             if (hitEffect == null) hitEffect = gameObject.AddComponent<HitEffect>();
+            if (explosionEffect == null) explosionEffect = GetComponent<ExplosionEffect>();
+            if (explosionEffect == null) explosionEffect = gameObject.AddComponent<ExplosionEffect>();
 
             for (int i = 0; i < characters.Length; i++)
             {
@@ -157,6 +161,7 @@ namespace BomberRally
 
         private void ExplodeOn(RallyCharacter victim)
         {
+            explosionEffect.Play(bomb.transform.position, victim.transform.position.y);
             bomb.Explode();
             victim.Eliminate();
             lastJudgement = $"{victim.DisplayName}: アウト!";

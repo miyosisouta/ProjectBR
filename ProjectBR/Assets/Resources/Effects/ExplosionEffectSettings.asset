@@ -1,0 +1,302 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c0ee1a2a31603454291d536150371891, type: 3}
+  m_Name: ExplosionEffectSettings
+  m_EditorClassIdentifier: Assembly-CSharp::BomberRally.ExplosionEffectSettings
+  scale: 1
+  fade:
+    serializedVersion: 2
+    key0: {r: 1, g: 1, b: 1, a: 1}
+    key1: {r: 1, g: 1, b: 1, a: 0.8}
+    key2: {r: 0, g: 0, b: 0, a: 0}
+    key3: {r: 0, g: 0, b: 0, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 65535
+    ctime2: 0
+    ctime3: 0
+    ctime4: 0
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 19661
+    atime2: 65535
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 2
+    m_NumAlphaKeys: 3
+  flashSize: 7
+  flashLifetime: 0.18
+  flashColor: {r: 1, g: 1, b: 0.95, a: 1}
+  coreSize: 3.5
+  coreLifetime: 0.35
+  coreColor: {r: 1, g: 0.8, b: 0.35, a: 1}
+  flashSizeCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0.8
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.25
+      value: 1.1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0.6
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  fireCount: 28
+  fireSpeed: 7
+  fireSize: 1.8
+  fireLifetime: 0.7
+  fireColorA: {r: 1, g: 0.95, b: 0.6, a: 1}
+  fireColorB: {r: 1, g: 0.55, b: 0.15, a: 1}
+  fireDrag: 6
+  fireGradient:
+    serializedVersion: 2
+    key0: {r: 1, g: 1, b: 0.9, a: 1}
+    key1: {r: 1, g: 0.85, b: 0.3, a: 0.9}
+    key2: {r: 1, g: 0.45, b: 0.1, a: 0}
+    key3: {r: 0.6, g: 0.1, b: 0.05, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 9830
+    ctime2: 29491
+    ctime3: 65535
+    ctime4: 0
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 26214
+    atime2: 65535
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 4
+    m_NumAlphaKeys: 3
+  fireSizeCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0.4
+      inSlope: 4
+      outSlope: 4
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.35
+      value: 1
+      inSlope: 0.6
+      outSlope: 0.6
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1.25
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  smokeCount: 16
+  smokeSize: 2.2
+  smokeLifetime: 1.6
+  smokeColor: {r: 0.18, g: 0.16, b: 0.15, a: 0.75}
+  smokeSpeed: {x: 2, y: 5}
+  smokeDrag: 3
+  smokeRise: 0.15
+  smokeSpin: 0.8
+  smokeGradient:
+    serializedVersion: 2
+    key0: {r: 0.6, g: 0.35, b: 0.2, a: 0}
+    key1: {r: 1, g: 1, b: 1, a: 1}
+    key2: {r: 1, g: 1, b: 1, a: 0.6}
+    key3: {r: 0, g: 0, b: 0, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 19661
+    ctime2: 65535
+    ctime3: 0
+    ctime4: 0
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 13107
+    atime2: 39321
+    atime3: 65535
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 3
+    m_NumAlphaKeys: 4
+  smokeSizeCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0.5
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1.8
+      inSlope: 0.3
+      outSlope: 0.3
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  sparkCount: 48
+  sparkSpeed: 18
+  sparkColor: {r: 1, g: 0.8, b: 0.4, a: 1}
+  sparkSize: {x: 0.06, y: 0.14}
+  sparkLifetime: {x: 0.4, y: 0.9}
+  sparkGravity: 1.6
+  sparkDrag: 1.5
+  sparkVelocityStretch: 0.04
+  sparkLengthStretch: 2
+  sparkSizeCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: -1
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: -1
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  lineCount: 18
+  lineSpeed: 30
+  lineSize: 0.18
+  lineLifetime: 0.16
+  lineColor: {r: 1, g: 0.8977988, b: 0.5990566, a: 1}
+  shockwaveSize: 9
+  shockwaveLifetime: 0.45
+  shockwaveColor: {r: 1, g: 0.8119682, b: 0.495283, a: 0.9}
+  innerRingScale: 0.6
+  innerRingLifetime: 0.6
+  innerRingColor: {r: 1, g: 0.5566141, b: 0.2980392, a: 0.63}
+  airRingScale: 0.7
+  airRingLifetime: 0.3
+  ringSizeCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0.15
+      inSlope: 3.5
+      outSlope: 3.5
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  aftershockCount: 4
+  aftershockRadius: 1.4
+  aftershockInterval: {x: 0.06, y: 0.14}
+  aftershockSize: {x: 0.4, y: 0.6}
+  hitStopDuration: 0.12
+  hitStopTimeScale: 0.05
+  screenFlashAlpha: 0.65
+  screenFlashDuration: 0.3
+  screenFlashColor: {r: 1, g: 0.95, b: 0.85, a: 1}
+  shakeAmplitude: 0.45
+  shakeDuration: 0.55
+  shakeFrequency: 28
+  lightColor: {r: 1, g: 0.6, b: 0.25, a: 1}
+  lightIntensity: 12
+  lightRange: 14
+  lightDuration: 0.6
