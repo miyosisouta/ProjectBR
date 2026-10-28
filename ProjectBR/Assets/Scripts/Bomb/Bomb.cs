@@ -13,6 +13,12 @@ namespace BomberRally
         [Tooltip("爆発時に生成するエフェクト（未設定なら何も出さない）")]
         [SerializeField] private GameObject explosionPrefab;
 
+        [Header("スマッシュの軌跡")]
+        [SerializeField] private Color smashTrailColor = new Color(1f, 0.7f, 0.3f, 0.7f);
+        [SerializeField] private float smashTrailWidth = 0.5f;
+        [SerializeField] private float smashTrailTime = 0.25f;
+
+        private TrailRenderer smashTrail;
         private Vector3 from;
         private Vector3 to;
         private float launchTime;
@@ -21,7 +27,8 @@ namespace BomberRally
 
         public float ArrivalTime => launchTime + duration;
 
-        public void Launch(Vector3 from, Vector3 to, float duration)
+        /// <param name="smash">スマッシュなら飛んでいる間だけ軌跡を残す</param>
+        public void Launch(Vector3 from, Vector3 to, float duration, bool smash = false)
         {
             this.from = from;
             this.to = to;
@@ -30,6 +37,7 @@ namespace BomberRally
             flying = true;
             transform.position = from;
             gameObject.SetActive(true);
+            SmashTrail.emitting = smash;
         }
 
         public void PlaceAt(Vector3 position)
@@ -37,17 +45,49 @@ namespace BomberRally
             flying = false;
             transform.position = position;
             gameObject.SetActive(true);
+            SmashTrail.emitting = false;
+            SmashTrail.Clear();
         }
 
         public void Explode()
         {
             flying = false;
+            SmashTrail.emitting = false;
+            SmashTrail.Clear();
             if (explosionPrefab != null)
             {
                 var fx = Instantiate(explosionPrefab, transform.position, Quaternion.identity);
                 Destroy(fx, 3f);
             }
             gameObject.SetActive(false);
+        }
+
+        // 爆弾は非アクティブのまま Launch されることがあるので Awake ではなく初回に作る
+        private TrailRenderer SmashTrail
+        {
+            get
+            {
+                if (smashTrail != null) return smashTrail;
+
+                var go = new GameObject("SmashTrail");
+                go.transform.SetParent(transform, false);
+                smashTrail = go.AddComponent<TrailRenderer>();
+                smashTrail.time = smashTrailTime;
+                smashTrail.widthMultiplier = smashTrailWidth;
+                smashTrail.widthCurve = AnimationCurve.Linear(0f, 1f, 1f, 0f);
+                smashTrail.minVertexDistance = 0.05f;
+                smashTrail.sharedMaterial = EffectAssets.SoftLine;
+                smashTrail.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                smashTrail.receiveShadows = false;
+
+                var fade = new Gradient();
+                fade.SetKeys(
+                    new[] { new GradientColorKey(smashTrailColor, 0f), new GradientColorKey(smashTrailColor, 1f) },
+                    new[] { new GradientAlphaKey(smashTrailColor.a, 0f), new GradientAlphaKey(0f, 1f) });
+                smashTrail.colorGradient = fade;
+                smashTrail.emitting = false;
+                return smashTrail;
+            }
         }
 
         private void Update()

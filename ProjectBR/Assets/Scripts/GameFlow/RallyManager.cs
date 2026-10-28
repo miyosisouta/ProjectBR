@@ -22,6 +22,8 @@ namespace BomberRally
         [SerializeField] private DiamondFormation formation;
         [SerializeField] private RallyCharacter[] characters = new RallyCharacter[4];
         [SerializeField] private Bomb bomb;
+        [Tooltip("未設定なら同じ GameObject に付ける")]
+        [SerializeField] private HitEffect hitEffect;
 
         [Header("判定")]
         [SerializeField] private HitWindow hitWindow = HitWindow.Default;
@@ -51,6 +53,9 @@ namespace BomberRally
 
         private void Start()
         {
+            if (hitEffect == null) hitEffect = GetComponent<HitEffect>();
+            if (hitEffect == null) hitEffect = gameObject.AddComponent<HitEffect>();
+
             for (int i = 0; i < characters.Length; i++)
             {
                 characters[i].Setup(i);
@@ -123,15 +128,17 @@ namespace BomberRally
 
             rallyCount++;
             currentFlightTime = Mathf.Max(minFlightTime, currentFlightTime * speedUpPerHit);
+            bool smash = result == HitResult.Perfect;
             float flightTime = currentFlightTime;
-            if (result == HitResult.Perfect) flightTime = Mathf.Max(minFlightTime, flightTime * smashMultiplier);
-            lastJudgement = $"{character.DisplayName}: {(result == HitResult.Perfect ? "スマッシュ!" : "ナイス")}";
-            character.PlayHit(result == HitResult.Perfect);
+            if (smash) flightTime = Mathf.Max(minFlightTime, flightTime * smashMultiplier);
+            lastJudgement = $"{character.DisplayName}: {(smash ? "スマッシュ!" : "ナイス")}";
+            character.PlayHit(smash);
 
-            SendBomb(character, flightTime, direction);
+            SendBomb(character, flightTime, direction, smash);
+            if (target != null) hitEffect.Play(character.HitPoint, target.HitPoint, smash);
         }
 
-        private void SendBomb(RallyCharacter from, float flightTime, HitDirection direction = HitDirection.None)
+        private void SendBomb(RallyCharacter from, float flightTime, HitDirection direction = HitDirection.None, bool smash = false)
         {
             holder = from;
             target = PickTarget(from, direction);
@@ -143,7 +150,7 @@ namespace BomberRally
 
             from.ReleaseStance();
             target.TakeStance(from.transform.position);
-            bomb.Launch(from.HitPoint, target.HitPoint, flightTime);
+            bomb.Launch(from.HitPoint, target.HitPoint, flightTime, smash);
             target.Controller.OnBombIncoming(bomb.ArrivalTime, hitWindow);
             SetState(State.Flying, 0f);
         }
