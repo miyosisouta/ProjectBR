@@ -64,9 +64,11 @@ namespace BomberRally.EditorTools
             var bomb = CreateBomb();
 
             var manager = new GameObject("RallyManager").AddComponent<RallyManager>();
+            var hitEffect = manager.gameObject.AddComponent<HitEffect>();
             var so = new SerializedObject(manager);
             so.FindProperty("formation").objectReferenceValue = formation;
             so.FindProperty("bomb").objectReferenceValue = bomb;
+            so.FindProperty("hitEffect").objectReferenceValue = hitEffect;
             var charactersProp = so.FindProperty("characters");
             charactersProp.arraySize = characters.Length;
             for (int i = 0; i < characters.Length; i++)
