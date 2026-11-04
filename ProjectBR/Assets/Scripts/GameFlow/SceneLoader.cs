@@ -81,6 +81,9 @@ public class SceneLoader : MonoBehaviour
     [Tooltip("フェードアウト完了後〜フェードイン開始前の間だけ表示するUI（Now Loadingのテキストやくるくる回るアイコンなど）。任意。FadeCanvasの子にしておくと自動でDontDestroyOnLoad対象になる")]
     [SerializeField] private GameObject _loadingIndicator;
 
+    [Tooltip("Loading Indicator 内の LoadingBar。設定するとロード進捗が自動で渡される。未設定の場合は Loading Indicator の子から自動で探す")]
+    [SerializeField] private LoadingBar _loadingBar;
+
     // フェード中に1フレームで進める時間の上限(秒)。30fps相当。
     // これより重いフレームでは、フェードが指定の秒数より少し長くなる。
     private const float MaxFadeStepSeconds = 1f / 30f;
@@ -98,6 +101,13 @@ public class SceneLoader : MonoBehaviour
         }
         _instance = this;
         DontDestroyOnLoad(gameObject);
+
+        // 割り当て忘れの保険: LoadingBarが未設定なら Loading Indicator 以下から探す
+        // （非アクティブでも見つかるよう true を指定。HideLoadingIndicator より前に探すこと）
+        if (_loadingBar == null && _loadingIndicator != null)
+        {
+            _loadingBar = _loadingIndicator.GetComponentInChildren<LoadingBar>(true);
+        }
 
         // 起動直後は画面が見えている状態（フェードで覆われていない状態）にしておく
         if (_fadeCanvasGroup != null)
@@ -156,6 +166,8 @@ public class SceneLoader : MonoBehaviour
             }
 
             // フェードで画面が覆われている（＝見えていない）間だけNow Loading的な表示を出す
+            // ※ LoadingBar は OnEnable で進捗を 0 にリセットするため、
+            //    必ず「表示 → SetProgress」の順にすること
             if (useLoadingIndicator) ShowLoadingIndicator();
 
             var op = SceneManager.LoadSceneAsync(sceneName);
@@ -180,7 +192,7 @@ public class SceneLoader : MonoBehaviour
             op.allowSceneActivation = false;
 
             float startTime = Time.realtimeSinceStartup;
-            progress?.Report(0.0f);
+            ReportProgress(0.0f, progress, useLoadingIndicator);
 
             // ロードが90%完了するまで待つ（残り10%はallowSceneActivationを待っている）
             while (true)
@@ -190,14 +202,22 @@ public class SceneLoader : MonoBehaviour
                 float timeRatio = minimumDuration <= 0.0f ? 1.0f : Mathf.Clamp01(elapsed / minimumDuration);
 
                 // 実進捗と経過時間の遅いほうに合わせると、ゲージが一瞬で振り切れない
-                progress?.Report(Mathf.Min(loadRatio, timeRatio));
+                ReportProgress(Mathf.Min(loadRatio, timeRatio), progress, useLoadingIndicator);
 
                 if (op.progress >= 0.9f && elapsed >= minimumDuration) break;
 
                 await UniTask.Yield(PlayerLoopTiming.Update, linkedCt);
             }
 
-            progress?.Report(1.0f);
+            ReportProgress(1.0f, progress, useLoadingIndicator);
+
+            // バーの見た目が100%まで到達するのを待つ。
+            // （LoadingBar は fillSpeed で滑らかに追従するため、待たないとバーが途中のまま
+            //   シーンが切り替わってしまう）
+            if (useLoadingIndicator && _loadingBar != null)
+            {
+                await UniTask.WaitUntil(() => _loadingBar.IsFilled, cancellationToken: linkedCt);
+            }
 
             op.allowSceneActivation = true;
             await UniTask.WaitUntil(() => op.isDone, cancellationToken: linkedCt);
@@ -220,6 +240,15 @@ public class SceneLoader : MonoBehaviour
         {
             IsLoading = false;
         }
+    }
+
+    /// <summary>
+    /// 進捗を外部(progress引数)と LoadingBar の両方に通知する。
+    /// </summary>
+    private void ReportProgress(float value, IProgress<float> progress, bool useLoadingIndicator)
+    {
+        progress?.Report(value);
+        if (useLoadingIndicator && _loadingBar != null) _loadingBar.SetProgress(value);
     }
 
     // ==================================================
