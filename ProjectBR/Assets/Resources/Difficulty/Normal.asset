@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 900e04610c2145b39d4cdc8e46c28bab, type: 3}
+  m_Name: Normal
+  m_EditorClassIdentifier: Assembly-CSharp::BomberRally.DifficultySettings
+  displayName: Normal
+  cpuSuccessRateAtSlowest: 1
+  cpuSuccessRateAtFastest: 0.7
+  cpuPerfectRate: 0.3
+  cpuFocusHumanRate: 0.6
+  initialFlightTime: 1.5
+  minFlightTime: 0.48
+  hitWindow:
+    early: 0.13
+    late: 0.08
+    perfect: 0.06

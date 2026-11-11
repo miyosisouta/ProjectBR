@@ -66,6 +66,8 @@ namespace BomberRally.EditorTools
             var manager = new GameObject("RallyManager").AddComponent<RallyManager>();
             var hitEffect = manager.gameObject.AddComponent<HitEffect>();
             var explosionEffect = manager.gameObject.AddComponent<ExplosionEffect>();
+            // 難易度を選んで Play を押すまで始まらないようにする
+            manager.gameObject.AddComponent<DifficultyTestWindow>();
             var so = new SerializedObject(manager);
             so.FindProperty("formation").objectReferenceValue = formation;
             so.FindProperty("bomb").objectReferenceValue = bomb;
