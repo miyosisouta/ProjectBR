@@ -7,7 +7,7 @@ using Random = UnityEngine.Random;
 namespace BomberRally
 {
     /// <summary>
-    /// ラリーの進行役。爆弾の行き先・打ち返し判定・脱落・勝敗を管理する。
+    /// ラリーの進行役。爆弾の行き先・打ち返し判定・脱落・順位・勝敗を管理する。
     /// 入力は直接読まず、各キャラクターの HitRequested だけを受け取る。
     /// AutoStart を切ると、StartGame が呼ばれるまで待ち、終わったら GameFinished で知らせる。
     /// </summary>
@@ -56,6 +56,7 @@ namespace BomberRally
         private int rallyCount;
         private string lastJudgement = "";
         private DifficultySettings difficulty;
+        private readonly RallyRanking ranking = new RallyRanking();
 
         private HitWindow HitWindow => difficulty.hitWindow;
 
@@ -65,7 +66,16 @@ namespace BomberRally
         /// <summary>勝敗が決まり、少し間を置いたあとに呼ばれる。引数は勝者（引き分けなら null）。</summary>
         public event Action<RallyCharacter> GameFinished;
 
+        /// <summary>
+        /// 誰かの順位が決まったときに呼ばれる（脱落した瞬間・勝者が決まった瞬間）。引数はキャラクターと順位（1 始まり）。
+        /// 順位確定時の演出はここにつなぐ。
+        /// </summary>
+        public event Action<RallyCharacter, int> RankDecided;
+
         public int RallyCount => rallyCount;
+
+        /// <summary>今の試合の順位。試合が終わった後の結果は RallyRanking.Last でも読める。</summary>
+        public RallyRanking Ranking => ranking;
 
         private void Start()
         {
@@ -110,6 +120,7 @@ namespace BomberRally
         {
             lastJudgement = "";
             foreach (var c in characters) c.ResetForRound();
+            ranking.Reset(characters.Length);
             formation.Arrange(characters);
             winner = null;
             BeginServe(characters[Random.Range(0, characters.Length)]);
@@ -204,7 +215,9 @@ namespace BomberRally
             explosionEffect.Play(bomb.transform.position, victim.transform.position.y);
             bomb.Explode();
             victim.Eliminate();
-            lastJudgement = $"{victim.DisplayName}: アウト!";
+            int rank = ranking.RecordElimination(victim);
+            lastJudgement = $"{victim.DisplayName}: アウト! ({rank}位)";
+            RankDecided?.Invoke(victim, rank);
 
             var alive = AliveCharacters();
             if (alive.Count <= 1)
@@ -218,7 +231,11 @@ namespace BomberRally
         private void EndGame(RallyCharacter champion)
         {
             winner = champion;
-            if (champion != null) champion.PlayVictory();
+            if (champion != null)
+            {
+                champion.PlayVictory();
+                RankDecided?.Invoke(champion, ranking.RecordWinner(champion));
+            }
             SetState(State.GameOver, afterGameOverDelay);
         }
 
@@ -259,13 +276,16 @@ namespace BomberRally
         {
             if (difficulty == null) return;
             var style = new GUIStyle(GUI.skin.label) { fontSize = 22 };
-            GUILayout.BeginArea(new Rect(16, 16, 600, 300));
+            GUILayout.BeginArea(new Rect(16, 16, 600, 480));
             GUILayout.Label($"難易度: {difficulty.displayName}", style);
             GUILayout.Label($"ラリー: {rallyCount}   飛行時間: {currentFlightTime:F2}s", style);
             GUILayout.Label(lastJudgement, style);
             if (state == State.GameOver)
             {
-                GUILayout.Label(winner != null ? $"{winner.DisplayName} の勝ち!" : "引き分け", style);
+                foreach (var entry in ranking.GetEntries())
+                {
+                    GUILayout.Label(entry.ToDisplayString(), style);
+                }
                 if (GameFinished == null) GUILayout.Label("R でもう一度", style);
             }
             GUILayout.EndArea();

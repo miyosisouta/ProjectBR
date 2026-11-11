@@ -162,7 +162,8 @@ namespace BomberRally
         private bool collapsed;
         private bool showCompare;
         private bool playing;
-        private string lastResult = "";
+        // 前回の結果（1 行目が難易度、続いて順位）。複数行を 1 つのラベルにすると高さが足りず切れるので 1 行ずつ持つ
+        private readonly List<string> lastResultLines = new List<string>();
         private string saveMessage = "";
 
         // 毎フレーム高さ 0 から作り直すと GUILayout の大きさ計算が 1 フレーム遅れて点滅するので、前回の大きさを覚えておく。
@@ -246,8 +247,14 @@ namespace BomberRally
         private void OnGameFinished(RallyCharacter winner)
         {
             playing = false;
-            string result = winner != null ? $"{winner.DisplayName} の勝ち" : "引き分け";
-            lastResult = $"前回: {custom.displayName} / {result}";
+            lastResultLines.Clear();
+            lastResultLines.Add($"前回: {custom.displayName}");
+            foreach (var entry in RallyRanking.Last)
+            {
+                lastResultLines.Add($"  {entry.ToDisplayString()}");
+            }
+            // 行が増えた分ウィンドウを測り直す
+            shrink = true;
         }
 
         private void OnGUI()
@@ -290,7 +297,7 @@ namespace BomberRally
 
             if (!collapsed)
             {
-                if (lastResult.Length > 0) GUILayout.Label(lastResult, itemStyle);
+                foreach (var line in lastResultLines) GUILayout.Label(line, itemStyle);
                 GUILayout.Space(4f);
 
                 var nextTab = (Tab)GUILayout.Toolbar((int)tab, TabLabels, GUILayout.Height(26f));
@@ -303,7 +310,8 @@ namespace BomberRally
                 GUILayout.Space(6f);
 
                 // 画面に収まらないときはマウスホイールでスクロールできるようにする
-                float maxHeight = ReferenceHeight - Margin * 2f - FixedPartsHeight;
+                float resultHeight = lastResultLines.Count * itemStyle.lineHeight;
+                float maxHeight = ReferenceHeight - Margin * 2f - FixedPartsHeight - resultHeight;
                 bool needsScroll = contentHeight > maxHeight;
                 scroll = GUILayout.BeginScrollView(scroll, false, needsScroll, GUIStyle.none, GUI.skin.verticalScrollbar,
                     GUILayout.Height(Mathf.Min(contentHeight, maxHeight)));
