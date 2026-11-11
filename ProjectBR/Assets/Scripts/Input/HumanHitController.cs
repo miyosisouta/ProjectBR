@@ -31,7 +31,7 @@ namespace BomberRally
 
         public void Initialize(RallyCharacter owner) => this.owner = owner;
 
-        public void OnBombIncoming(float arrivalTime, HitWindow window) { }
+        public void OnBombIncoming(float arrivalTime, float flightTime, DifficultySettings difficulty) { }
 
         public void ResetState() => CurrentAim = HitDirection.None;
 

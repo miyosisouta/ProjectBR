@@ -1,17 +1,21 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Random = UnityEngine.Random;
 
 namespace BomberRally
 {
     /// <summary>
     /// ラリーの進行役。爆弾の行き先・打ち返し判定・脱落・勝敗を管理する。
     /// 入力は直接読まず、各キャラクターの HitRequested だけを受け取る。
+    /// AutoStart を切ると、StartGame が呼ばれるまで待ち、終わったら GameFinished で知らせる。
     /// </summary>
     public class RallyManager : MonoBehaviour
     {
         private enum State
         {
+            Idle,
             Serving,
             Flying,
             Exploded,
@@ -28,13 +32,10 @@ namespace BomberRally
         [SerializeField] private ExplosionEffect explosionEffect;
 
         [Header("判定")]
-        [SerializeField] private HitWindow hitWindow = HitWindow.Default;
         [Tooltip("早押しした後に入力を受け付けない秒数（連打対策）")]
         [SerializeField] private float tooEarlyLockout = 0.4f;
 
-        [Header("爆弾の速さ")]
-        [SerializeField] private float initialFlightTime = 1.6f;
-        [SerializeField] private float minFlightTime = 0.45f;
+        [Header("爆弾の速さ（最初・最速の速さは難易度設定にある）")]
         [Tooltip("打ち返すたびに飛行時間に掛ける倍率")]
         [SerializeField] private float speedUpPerHit = 0.94f;
         [Tooltip("スマッシュのときに追加で掛ける倍率")]
@@ -43,6 +44,8 @@ namespace BomberRally
         [Header("間")]
         [SerializeField] private float serveDelay = 1.0f;
         [SerializeField] private float afterExplosionDelay = 1.5f;
+        [Tooltip("勝敗が決まってから GameFinished を知らせるまでの秒数（勝ちポーズを見せる間）")]
+        [SerializeField] private float afterGameOverDelay = 2.0f;
 
         private State state;
         private float stateTimer;
@@ -52,6 +55,17 @@ namespace BomberRally
         private RallyCharacter winner;
         private int rallyCount;
         private string lastJudgement = "";
+        private DifficultySettings difficulty;
+
+        private HitWindow HitWindow => difficulty.hitWindow;
+
+        /// <summary>false にすると、シーン開始時に始めずに StartGame を待つ。Start より前（Awake）で設定する。</summary>
+        public bool AutoStart { get; set; } = true;
+
+        /// <summary>勝敗が決まり、少し間を置いたあとに呼ばれる。引数は勝者（引き分けなら null）。</summary>
+        public event Action<RallyCharacter> GameFinished;
+
+        public int RallyCount => rallyCount;
 
         private void Start()
         {
@@ -62,9 +76,25 @@ namespace BomberRally
 
             for (int i = 0; i < characters.Length; i++)
             {
-                characters[i].Setup(i);
+                characters[i].Setup(i, characters);
                 characters[i].HitRequested += OnHitRequested;
             }
+
+            if (AutoStart)
+            {
+                StartGame(DifficultySettings.Load(DifficultySettings.Selected));
+            }
+            else
+            {
+                formation.Arrange(characters);
+                bomb.gameObject.SetActive(false);
+            }
+        }
+
+        /// <summary>指定の難易度で最初から始める。</summary>
+        public void StartGame(DifficultySettings settings)
+        {
+            difficulty = settings;
             StartRound();
         }
 
@@ -78,6 +108,7 @@ namespace BomberRally
 
         private void StartRound()
         {
+            lastJudgement = "";
             foreach (var c in characters) c.ResetForRound();
             formation.Arrange(characters);
             winner = null;
@@ -89,7 +120,7 @@ namespace BomberRally
             holder = server;
             target = null;
             rallyCount = 0;
-            currentFlightTime = initialFlightTime;
+            currentFlightTime = difficulty.initialFlightTime;
             bomb.PlaceAt(server.HitPoint);
             SetState(State.Serving, serveDelay);
         }
@@ -103,7 +134,7 @@ namespace BomberRally
                     break;
 
                 case State.Flying:
-                    if (Time.time > bomb.ArrivalTime + hitWindow.late) ExplodeOn(target);
+                    if (Time.time > bomb.ArrivalTime + HitWindow.late) ExplodeOn(target);
                     break;
 
                 case State.Exploded:
@@ -111,6 +142,14 @@ namespace BomberRally
                     break;
 
                 case State.GameOver:
+                    // 知らせる先があればそちらに任せる（テスト用ウィンドウなど）。なければ R でもう一度
+                    if (GameFinished != null)
+                    {
+                        if (Time.time < stateTimer) break;
+                        SetState(State.Idle, 0f);
+                        GameFinished.Invoke(winner);
+                        break;
+                    }
                     var keyboard = Keyboard.current;
                     if (keyboard != null && keyboard.rKey.wasPressedThisFrame) StartRound();
                     break;
@@ -122,7 +161,7 @@ namespace BomberRally
             if (state != State.Flying || character != target) return;
             if (Time.time < character.LockedUntil) return;
 
-            var result = hitWindow.Judge(Time.time - bomb.ArrivalTime);
+            var result = HitWindow.Judge(Time.time - bomb.ArrivalTime);
             if (result == HitResult.TooEarly)
             {
                 character.LockedUntil = Time.time + tooEarlyLockout;
@@ -131,6 +170,7 @@ namespace BomberRally
             }
 
             rallyCount++;
+            float minFlightTime = difficulty.minFlightTime;
             currentFlightTime = Mathf.Max(minFlightTime, currentFlightTime * speedUpPerHit);
             bool smash = result == HitResult.Perfect;
             float flightTime = currentFlightTime;
@@ -155,7 +195,7 @@ namespace BomberRally
             from.ReleaseStance();
             target.TakeStance(from.transform.position);
             bomb.Launch(from.HitPoint, target.HitPoint, flightTime, smash);
-            target.Controller.OnBombIncoming(bomb.ArrivalTime, hitWindow);
+            target.Controller.OnBombIncoming(bomb.ArrivalTime, flightTime, difficulty);
             SetState(State.Flying, 0f);
         }
 
@@ -179,7 +219,7 @@ namespace BomberRally
         {
             winner = champion;
             if (champion != null) champion.PlayVictory();
-            SetState(State.GameOver, 0f);
+            SetState(State.GameOver, afterGameOverDelay);
         }
 
         private void SetState(State next, float delay)
@@ -217,14 +257,16 @@ namespace BomberRally
         // HUD ができるまでの確認用表示
         private void OnGUI()
         {
+            if (difficulty == null) return;
             var style = new GUIStyle(GUI.skin.label) { fontSize = 22 };
             GUILayout.BeginArea(new Rect(16, 16, 600, 300));
+            GUILayout.Label($"難易度: {difficulty.displayName}", style);
             GUILayout.Label($"ラリー: {rallyCount}   飛行時間: {currentFlightTime:F2}s", style);
             GUILayout.Label(lastJudgement, style);
             if (state == State.GameOver)
             {
                 GUILayout.Label(winner != null ? $"{winner.DisplayName} の勝ち!" : "引き分け", style);
-                GUILayout.Label("R でもう一度", style);
+                if (GameFinished == null) GUILayout.Label("R でもう一度", style);
             }
             GUILayout.EndArea();
         }

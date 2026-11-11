@@ -33,10 +33,12 @@ namespace BomberRally
         public int Index { get; private set; }
         public bool IsAlive { get; private set; } = true;
         public IHitController Controller { get; private set; }
+        public bool IsHuman => Controller is HumanHitController;
         public CharacterAnimator Animator { get; private set; }
         public Vector3 HitPoint => transform.position + Vector3.up * hitPointHeight;
         public Stance Stance { get; private set; }
 
+        private RallyCharacter[] roster = new RallyCharacter[0];
         private Quaternion homeRotation = Quaternion.identity;
         private Quaternion targetRotation = Quaternion.identity;
         private float stanceReleaseTime = -1f;
@@ -46,9 +48,11 @@ namespace BomberRally
 
         public event Action<RallyCharacter, HitDirection> HitRequested;
 
-        public void Setup(int index)
+        /// <param name="roster">位置番号順に並んだ参加者全員（自分を含む）</param>
+        public void Setup(int index, RallyCharacter[] roster)
         {
             Index = index;
+            this.roster = roster;
             Animator = GetComponent<CharacterAnimator>();
             Controller = GetComponent<IHitController>();
             if (Controller == null)
@@ -60,6 +64,14 @@ namespace BomberRally
         }
 
         public void RequestHit(HitDirection direction) => HitRequested?.Invoke(this, direction);
+
+        /// <summary>自分から見て direction 側にいる相手。いなければ null。</summary>
+        public RallyCharacter GetRivalInDirection(HitDirection direction)
+        {
+            int slot = DiamondFormation.GetSlotInDirection(Index, direction);
+            if (slot < 0 || slot >= roster.Length || roster[slot] == this) return null;
+            return roster[slot];
+        }
 
         /// <summary>立ち位置で正面とする方向（ふつうはステージ中央）を決め、すぐにその向きにする。</summary>
         public void SetHome(Vector3 lookAt)
