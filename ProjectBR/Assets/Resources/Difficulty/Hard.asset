@@ -23,3 +23,5 @@ MonoBehaviour:
     early: 0.13
     late: 0.08
     perfect: 0.06
+  stagePrefab: {fileID: 5569564616319824095, guid: c0cdc00f29ae3454883147c854595368, type: 3}
+  timeOfDay: 1

@@ -72,7 +72,25 @@ namespace BomberRally
         /// </summary>
         public event Action<RallyCharacter, int> RankDecided;
 
+        /// <summary>StartGame が呼ばれた直後（最初のサーブより前）に呼ばれる。ステージの読み込みなどに使う。</summary>
+        public event Action<DifficultySettings> GameStarted;
+
+        /// <summary>爆弾が爆発した瞬間に呼ばれる。引数は脱落したキャラクターと爆発した位置。ステージの演出はここにつなぐ。</summary>
+        public event Action<RallyCharacter, Vector3> BombExploded;
+
         public int RallyCount => rallyCount;
+
+        /// <summary>今の難易度。StartGame が呼ばれるまでは null。</summary>
+        public DifficultySettings Difficulty => difficulty;
+
+        /// <summary>
+        /// 今の爆弾の速さの度合い。最初の速さで 0、最速で 1。サーブのたび（脱落者が出たあと）に 0 に戻る。
+        /// 爆弾の速さに合わせた演出（観客が怖がるなど）はこれを毎フレーム読めばよい。
+        /// </summary>
+        public float SpeedRatio => difficulty == null ? 0f : difficulty.SpeedRatio(currentFlightTime);
+
+        /// <summary>試合中か（サーブ〜勝敗が決まるまで）。待機中・試合後は false。時間で変わる演出（空の色など）の時計に使う。</summary>
+        public bool IsInPlay => difficulty != null && state != State.Idle && state != State.GameOver;
 
         /// <summary>今の試合の順位。試合が終わった後の結果は RallyRanking.Last でも読める。</summary>
         public RallyRanking Ranking => ranking;
@@ -105,6 +123,7 @@ namespace BomberRally
         public void StartGame(DifficultySettings settings)
         {
             difficulty = settings;
+            GameStarted?.Invoke(settings);
             StartRound();
         }
 
@@ -218,8 +237,10 @@ namespace BomberRally
         private void ExplodeOn(RallyCharacter victim)
         {
             explosionEffect.Play(bomb.transform.position, victim.transform.position.y);
+            var explodedAt = bomb.transform.position;
             bomb.Explode();
             victim.Eliminate();
+            BombExploded?.Invoke(victim, explodedAt);
             int rank = ranking.RecordElimination(victim);
             lastJudgement = $"{victim.DisplayName}: アウト! ({rank}位)";
             RankDecided?.Invoke(victim, rank);
