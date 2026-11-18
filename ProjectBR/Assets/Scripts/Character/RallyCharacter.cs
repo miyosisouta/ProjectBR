@@ -10,6 +10,13 @@ namespace BomberRally
         Right,
     }
 
+    /// <summary>右手で打つときの振り方。フォアは右から左へ、バックは左から右へ振る。</summary>
+    public enum SwingSide
+    {
+        Forehand,
+        Backhand,
+    }
+
     /// <summary>
     /// ラリーに参加する 1 体分のキャラクター。操作役（IHitController）は同じ GameObject に付ける。
     /// </summary>
@@ -35,6 +42,7 @@ namespace BomberRally
         public IHitController Controller { get; private set; }
         public bool IsHuman => Controller is HumanHitController;
         public CharacterAnimator Animator { get; private set; }
+        public FryingPanAim PanAim { get; private set; }
         public Vector3 HitPoint => transform.position + Vector3.up * hitPointHeight;
         public Stance Stance { get; private set; }
 
@@ -54,6 +62,7 @@ namespace BomberRally
             Index = index;
             this.roster = roster;
             Animator = GetComponent<CharacterAnimator>();
+            PanAim = GetComponent<FryingPanAim>();
             Controller = GetComponent<IHitController>();
             if (Controller == null)
             {
@@ -126,9 +135,35 @@ namespace BomberRally
             transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, turnSpeed * Time.deltaTime);
         }
 
-        public void PlayHit(bool smash)
+        /// <summary>
+        /// 振り方を決める。左から来た球はバック、右から来た球はフォア。
+        /// 正面から来た球は打ち返す先で決め、左へはフォア、右へはバック、正面へはランダム。
+        /// </summary>
+        public SwingSide ChooseSwing(Vector3 hitTarget)
         {
-            if (Animator != null) Animator.PlayHit(smash);
+            switch (Stance)
+            {
+                case Stance.Left: return SwingSide.Backhand;
+                case Stance.Right: return SwingSide.Forehand;
+            }
+
+            var dir = hitTarget - transform.position;
+            dir.y = 0f;
+            float angle = Vector3.SignedAngle(homeRotation * Vector3.forward, dir, Vector3.up);
+            if (angle < -neutralThreshold) return SwingSide.Forehand;
+            if (angle > neutralThreshold) return SwingSide.Backhand;
+            return UnityEngine.Random.value < 0.5f ? SwingSide.Forehand : SwingSide.Backhand;
+        }
+
+        public void PlayHit(bool smash, SwingSide side)
+        {
+            if (Animator != null) Animator.PlayHit(smash, side);
+        }
+
+        /// <summary>持っているフライパンの面を打ち返す相手の方へ向ける。</summary>
+        public void AimPanAt(Vector3 target, SwingSide side)
+        {
+            if (PanAim != null) PanAim.AimAt(target, side);
         }
 
         public void PlayVictory()
@@ -150,6 +185,7 @@ namespace BomberRally
             LockedUntil = 0f;
             gameObject.SetActive(true);
             Controller?.ResetState();
+            if (PanAim != null) PanAim.ResetAim();
             if (Animator != null) Animator.PlayIdle();
         }
     }

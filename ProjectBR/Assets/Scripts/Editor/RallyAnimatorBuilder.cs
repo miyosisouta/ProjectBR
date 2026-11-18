@@ -17,7 +17,10 @@ namespace BomberRally.EditorTools
         {
             public string ControllerName;
             public string Idle;
+            /// <summary>バックハンド（左から右へ振る）。Forehand がなければすべてこれで打つ</summary>
             public string Hit;
+            /// <summary>フォアハンド（右から左へ振る）。省略可</summary>
+            public string Forehand;
             public string Smash;
             public string Die;
             public string Victory;
@@ -28,6 +31,7 @@ namespace BomberRally.EditorTools
             ControllerName = "HeroRally",
             Idle = "Assets/Animations/Hero/Idle_Battle_SwordAndShiled.fbx",
             Hit = "Assets/Animations/Hero/Attack01_SwordAndShiled.fbx",
+            Forehand = "Assets/Animations/Hero/Attack02_SwordAndShiled.fbx",
             Smash = "Assets/Animations/Hero/Attack04_SwordAndShiled.fbx",
             Die = "Assets/Animations/Hero/Die01_SwordAndShield.fbx",
             Victory = "Assets/Animations/Hero/Victory_Battle_SwordAndShield.fbx",
@@ -67,6 +71,12 @@ namespace BomberRally.EditorTools
             AddReturnToIdle(sm.AddState("Smash"), clips[2], idle);
             sm.AddState("Die").motion = clips[3];
             sm.AddState("Victory").motion = clips[4];
+
+            if (!string.IsNullOrEmpty(spec.Forehand))
+            {
+                var forehand = LoadClip(spec.Forehand);
+                if (forehand != null) AddReturnToIdle(sm.AddState("Forehand"), forehand, idle);
+            }
 
             AssetDatabase.SaveAssets();
             return controller;

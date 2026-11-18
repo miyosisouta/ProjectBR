@@ -131,6 +131,7 @@ GameObject:
   - component: {fileID: 14069911}
   - component: {fileID: 14069909}
   - component: {fileID: 14069910}
+  - component: {fileID: 14069913}
   m_Layer: 0
   m_Name: P1
   m_TagString: Untagged
@@ -205,6 +206,22 @@ Transform:
   - {fileID: 1017433974}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &14069913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 14069908}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 736f7e062a0f25b4abe33716bd1e2828, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BomberRally.FryingPanAim
+  pan: {fileID: 2055407384}
+  blendInTime: 0.06
+  holdTime: 0.35
+  blendOutTime: 0.2
 --- !u!1 &124519504
 GameObject:
   m_ObjectHideFlags: 0
@@ -894,6 +911,14 @@ PrefabInstance:
       propertyPath: m_LocalRotation.z
       value: 0.0012542872
       objectReference: {fileID: 0}
+    - target: {fileID: 3058560441782647270, guid: cc91c8ba8b9a34f4d99e70d721f60b64, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6767091442817321933, guid: cc91c8ba8b9a34f4d99e70d721f60b64, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7019920669011962644, guid: cc91c8ba8b9a34f4d99e70d721f60b64, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -949,9 +974,6 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 6273013703869295828, guid: cc91c8ba8b9a34f4d99e70d721f60b64, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1807086197}
     - targetCorrespondingSourceObject: {fileID: 4745839230877426559, guid: cc91c8ba8b9a34f4d99e70d721f60b64, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2055407384}
@@ -970,11 +992,6 @@ Transform:
 --- !u!4 &1017433975 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4745839230877426559, guid: cc91c8ba8b9a34f4d99e70d721f60b64, type: 3}
-  m_PrefabInstance: {fileID: 1017433972}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &1017433976 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 6273013703869295828, guid: cc91c8ba8b9a34f4d99e70d721f60b64, type: 3}
   m_PrefabInstance: {fileID: 1017433972}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &1070490013
@@ -1134,8 +1151,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a983e78af585364795a341be1ff60ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BomberRally.CpuHitController
-  successRate: 0.85
-  perfectRate: 0.2
 --- !u!114 &1107583990
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1338,8 +1353,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a983e78af585364795a341be1ff60ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BomberRally.CpuHitController
-  successRate: 0.85
-  perfectRate: 0.2
 --- !u!114 &1355250328
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1678,21 +1691,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1561816730
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1561816727}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3de9225248034a508aba9eacc29bb5c1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BomberRally.DifficultyTestWindow
-  manager: {fileID: 1561816728}
-  alignRight: 1
-  windowWidth: 520
 --- !u!1 &1561816727
 GameObject:
   m_ObjectHideFlags: 0
@@ -1732,17 +1730,12 @@ MonoBehaviour:
   bomb: {fileID: 1070490014}
   hitEffect: {fileID: 0}
   explosionEffect: {fileID: 0}
-  hitWindow:
-    early: 0.16
-    late: 0.1
-    perfect: 0.06
   tooEarlyLockout: 0.4
-  initialFlightTime: 1.6
-  minFlightTime: 0.45
   speedUpPerHit: 0.94
   smashMultiplier: 0.75
   serveDelay: 1
   afterExplosionDelay: 1.5
+  afterGameOverDelay: 2
 --- !u!4 &1561816729
 Transform:
   m_ObjectHideFlags: 0
@@ -1758,6 +1751,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1561816730
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1561816727}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3de9225248034a508aba9eacc29bb5c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BomberRally.DifficultyTestWindow
+  manager: {fileID: 1561816728}
+  alignRight: 1
+  windowWidth: 520
 --- !u!1001 &1618404880
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1968,8 +1976,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a983e78af585364795a341be1ff60ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BomberRally.CpuHitController
-  successRate: 0.85
-  perfectRate: 0.2
 --- !u!114 &1642704175
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2001,68 +2007,6 @@ Transform:
   - {fileID: 1892429168}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &1807086196
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 1017433976}
-    m_Modifications:
-    - target: {fileID: 5820153593837821349, guid: ac86f8ddca59acb4184d3eb42067bafa, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5820153593837821349, guid: ac86f8ddca59acb4184d3eb42067bafa, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5820153593837821349, guid: ac86f8ddca59acb4184d3eb42067bafa, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5820153593837821349, guid: ac86f8ddca59acb4184d3eb42067bafa, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5820153593837821349, guid: ac86f8ddca59acb4184d3eb42067bafa, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5820153593837821349, guid: ac86f8ddca59acb4184d3eb42067bafa, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5820153593837821349, guid: ac86f8ddca59acb4184d3eb42067bafa, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5820153593837821349, guid: ac86f8ddca59acb4184d3eb42067bafa, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5820153593837821349, guid: ac86f8ddca59acb4184d3eb42067bafa, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5820153593837821349, guid: ac86f8ddca59acb4184d3eb42067bafa, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6597358353836066591, guid: ac86f8ddca59acb4184d3eb42067bafa, type: 3}
-      propertyPath: m_Name
-      value: Shield05PBR
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: ac86f8ddca59acb4184d3eb42067bafa, type: 3}
---- !u!4 &1807086197 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 5820153593837821349, guid: ac86f8ddca59acb4184d3eb42067bafa, type: 3}
-  m_PrefabInstance: {fileID: 1807086196}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1850086588
 GameObject:
   m_ObjectHideFlags: 0
@@ -2324,47 +2268,47 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1017433975}
     m_Modifications:
-    - target: {fileID: 3832907126045494399, guid: 3617e4093ca8d5145986d37c89cfd692, type: 3}
+    - target: {fileID: 5180236401957713201, guid: e31b50da1a304a848d53dadc85bae694, type: 3}
       propertyPath: m_Name
-      value: OHS06PBR
+      value: FryingPan
       objectReference: {fileID: 0}
-    - target: {fileID: 4502165957148481221, guid: 3617e4093ca8d5145986d37c89cfd692, type: 3}
+    - target: {fileID: 5180236401957713202, guid: e31b50da1a304a848d53dadc85bae694, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4502165957148481221, guid: 3617e4093ca8d5145986d37c89cfd692, type: 3}
+    - target: {fileID: 5180236401957713202, guid: e31b50da1a304a848d53dadc85bae694, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4502165957148481221, guid: 3617e4093ca8d5145986d37c89cfd692, type: 3}
+    - target: {fileID: 5180236401957713202, guid: e31b50da1a304a848d53dadc85bae694, type: 3}
       propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4502165957148481221, guid: 3617e4093ca8d5145986d37c89cfd692, type: 3}
+    - target: {fileID: 5180236401957713202, guid: e31b50da1a304a848d53dadc85bae694, type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 4502165957148481221, guid: 3617e4093ca8d5145986d37c89cfd692, type: 3}
+    - target: {fileID: 5180236401957713202, guid: e31b50da1a304a848d53dadc85bae694, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4502165957148481221, guid: 3617e4093ca8d5145986d37c89cfd692, type: 3}
+    - target: {fileID: 5180236401957713202, guid: e31b50da1a304a848d53dadc85bae694, type: 3}
       propertyPath: m_LocalRotation.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4502165957148481221, guid: 3617e4093ca8d5145986d37c89cfd692, type: 3}
+    - target: {fileID: 5180236401957713202, guid: e31b50da1a304a848d53dadc85bae694, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4502165957148481221, guid: 3617e4093ca8d5145986d37c89cfd692, type: 3}
+    - target: {fileID: 5180236401957713202, guid: e31b50da1a304a848d53dadc85bae694, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4502165957148481221, guid: 3617e4093ca8d5145986d37c89cfd692, type: 3}
+    - target: {fileID: 5180236401957713202, guid: e31b50da1a304a848d53dadc85bae694, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4502165957148481221, guid: 3617e4093ca8d5145986d37c89cfd692, type: 3}
+    - target: {fileID: 5180236401957713202, guid: e31b50da1a304a848d53dadc85bae694, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
@@ -2372,10 +2316,10 @@ PrefabInstance:
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 3617e4093ca8d5145986d37c89cfd692, type: 3}
+  m_SourcePrefab: {fileID: 100100000, guid: e31b50da1a304a848d53dadc85bae694, type: 3}
 --- !u!4 &2055407384 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 4502165957148481221, guid: 3617e4093ca8d5145986d37c89cfd692, type: 3}
+  m_CorrespondingSourceObject: {fileID: 5180236401957713202, guid: e31b50da1a304a848d53dadc85bae694, type: 3}
   m_PrefabInstance: {fileID: 2055407383}
   m_PrefabAsset: {fileID: 0}
 --- !u!21 &2074874434

@@ -14,8 +14,8 @@ namespace BomberRally.EditorTools
     {
         private const string ScenePath = "Assets/Scenes/RallyPrototype.unity";
         private const string HeroPrefab = "Assets/Prefabs/Character/Hero/FemaleCharacterPBR.prefab";
-        private const string SwordPrefab = "Assets/Prefabs/Character/Hero/OHS06PBR.prefab";
-        private const string ShieldPrefab = "Assets/Prefabs/Character/Hero/Shield05PBR.prefab";
+        // 持ち手が原点・面が +Y 方向に伸びるよう調整済みのフライパン
+        private const string FryingPanPrefab = "Assets/Prefabs/Tools/Pot/FryingPan.prefab";
         private const string SlimePrefab = "Assets/Prefabs/Character/Slime/SlimePBR.prefab";
 
         private static readonly Color[] PlayerColors =
@@ -114,8 +114,17 @@ namespace BomberRally.EditorTools
 
                 if (isHero)
                 {
-                    AttachToBone(model.transform, "weapon_r", SwordPrefab);
-                    AttachToBone(model.transform, "weapon_l", ShieldPrefab);
+                    // モデルに最初から付いている剣と盾は隠し、右手にフライパンだけを持たせる
+                    HideChildren(model.transform, "weapon_l");
+                    HideChildren(model.transform, "weapon_r");
+                    var pan = AttachToBone(model.transform, "weapon_r", FryingPanPrefab);
+                    if (pan != null)
+                    {
+                        var aim = root.AddComponent<FryingPanAim>();
+                        var pso = new SerializedObject(aim);
+                        pso.FindProperty("pan").objectReferenceValue = pan.transform;
+                        pso.ApplyModifiedPropertiesWithoutUndo();
+                    }
                 }
 
                 var anim = root.AddComponent<CharacterAnimator>();
@@ -149,15 +158,28 @@ namespace BomberRally.EditorTools
             return character;
         }
 
-        private static void AttachToBone(Transform model, string boneName, string prefabPath)
+        private static Transform FindBone(Transform model, string boneName)
         {
-            var bone = model.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == boneName);
+            return model.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == boneName);
+        }
+
+        private static void HideChildren(Transform model, string boneName)
+        {
+            var bone = FindBone(model, boneName);
+            if (bone == null) return;
+            foreach (Transform child in bone) child.gameObject.SetActive(false);
+        }
+
+        private static GameObject AttachToBone(Transform model, string boneName, string prefabPath)
+        {
+            var bone = FindBone(model, boneName);
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-            if (bone == null || prefab == null) return;
+            if (bone == null || prefab == null) return null;
 
             var item = (GameObject)PrefabUtility.InstantiatePrefab(prefab, bone);
             item.transform.localPosition = Vector3.zero;
             item.transform.localRotation = Quaternion.identity;
+            return item;
         }
 
         private static void CreatePlaceholderBody(GameObject root, int index)
