@@ -42,6 +42,12 @@ namespace BomberRally
         [Header("判定の厳しさ")]
         public HitWindow hitWindow = HitWindow.Default;
 
+        [Header("ステージ")]
+        [Tooltip("この難易度で使うステージ（StageEnvironment を付けたプレハブ）。未設定なら仮の地面のまま")]
+        public GameObject stagePrefab;
+        [Tooltip("ステージの時間帯")]
+        public StageTimeOfDay timeOfDay = StageTimeOfDay.Day;
+
         /// <summary>タイトルなどで選んだ難易度。シーンをまたいで覚えておく。</summary>
         public static DifficultyLevel Selected { get; set; } = DifficultyLevel.Normal;
 

@@ -83,6 +83,9 @@ namespace BomberRally.EditorTools
 
             formation.Arrange(characters);
 
+            // 難易度に合わせて公園・ガソリンスタンドを読み込む（ステージは BomberRally > ステージを作成 で作る）
+            StageBuilder.AddLoaderToScene(manager);
+
             EditorSceneManager.SaveScene(scene, ScenePath);
             Debug.Log($"{ScenePath} を作成しました。再生して Space で打ち返し（P1 が手前）。");
         }
