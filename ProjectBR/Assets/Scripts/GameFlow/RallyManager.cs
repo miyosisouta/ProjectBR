@@ -187,10 +187,15 @@ namespace BomberRally
             float flightTime = currentFlightTime;
             if (smash) flightTime = Mathf.Max(minFlightTime, flightTime * smashMultiplier);
             lastJudgement = $"{character.DisplayName}: {(smash ? "スマッシュ!" : "ナイス")}";
-            character.PlayHit(smash);
-
             SendBomb(character, flightTime, direction, smash);
-            if (target != null) hitEffect.Play(character.HitPoint, target.HitPoint, smash);
+            if (target != null)
+            {
+                // 振り方は打ち返す相手が決まってから選ぶ（構えは少しの間そのまま残る）
+                var side = character.ChooseSwing(target.HitPoint);
+                character.PlayHit(smash, side);
+                character.AimPanAt(target.HitPoint, side);
+                hitEffect.Play(character.HitPoint, target.HitPoint, smash);
+            }
         }
 
         private void SendBomb(RallyCharacter from, float flightTime, HitDirection direction = HitDirection.None, bool smash = false)
