@@ -16,6 +16,11 @@ using UnityEngine.SceneManagement;
 ///   ・フェードを使うかどうか（bool）
 ///   ・フェードや遅延の秒数（float）
 /// だけを渡せばよい。フェードの中身（Lerpやalpha操作）はここに隠蔽する。
+///
+/// 遷移の流れ（useFade・useLoadingIndicatorともにtrueの場合）:
+///   現在の画面 → 暗転 → ローディング表示(文字がふわっと出る) → ロード → 裏でシーン切り替え(暗いまま)
+///   → 文字がフェードアウト → フェードオーバーレイが濃くなる → ローディング画面がフェードアウト
+///   → 暗転が解けて次の画面
 /// </summary>
 public class SceneLoader : MonoBehaviour
 {
@@ -78,12 +83,25 @@ public class SceneLoader : MonoBehaviour
     [SerializeField] private float _defaultFadeInDuration = 0.3f;
 
     [Header("ローディング表示")]
-    [Tooltip("フェードアウト完了後〜フェードイン開始前の間だけ表示するUI（Now Loadingのテキストやくるくる回るアイコンなど）。任意。FadeCanvasの子にしておくと自動でDontDestroyOnLoad対象になる")]
+    [Tooltip("フェードアウト完了後〜フェードイン開始前の間だけ表示するUI（Now Loadingのテキストなど）。任意。FadeCanvasの子にしておくと自動でDontDestroyOnLoad対象になる。このオブジェクト(またはその子)にLoadingScreenを付けると、表示/消去がふわっとフェードする")]
     [SerializeField] private GameObject _loadingIndicator;
+
+    // 読み込み完了後の演出
+    [Tooltip("読み込みが終わってから、文字を見せるために止める秒数")]
+    [SerializeField] private float _completeHoldSeconds = 0.3f;
+    [Tooltip("文字を見せたあと、文字だけがフェードアウトする秒数（LoadingScreenがある場合のみ有効）")]
+    [SerializeField] private float _completeFadeSeconds = 0.3f;
+    [Tooltip("文字が消えたあと、フェードオーバーレイ（黒）が濃くなってローディング画面全体を覆う秒数")]
+    [SerializeField] private float _overlayFadeSeconds = 0.3f;
+    [Tooltip("オーバーレイで覆ったあと、ローディング画面そのものがフェードアウトする秒数")]
+    [SerializeField] private float _loadingScreenFadeSeconds = 0.3f;
 
     // フェード中に1フレームで進める時間の上限(秒)。30fps相当。
     // これより重いフレームでは、フェードが指定の秒数より少し長くなる。
     private const float MaxFadeStepSeconds = 1f / 30f;
+
+    // Loading Indicator に付いている LoadingScreen（無ければnull。その場合は即座に消える）
+    private LoadingScreen _loadingScreen;
 
     /// <summary>現在ロード処理中かどうか。多重起動防止に使う</summary>
     public bool IsLoading { get; private set; }
@@ -106,6 +124,10 @@ public class SceneLoader : MonoBehaviour
             _fadeCanvasGroup.blocksRaycasts = false;
         }
 
+        // 非アクティブでも取得できるよう includeInactive = true
+        if (_loadingIndicator != null)
+            _loadingScreen = _loadingIndicator.GetComponentInChildren<LoadingScreen>(true);
+
         HideLoadingIndicator();
     }
 
@@ -115,13 +137,13 @@ public class SceneLoader : MonoBehaviour
 
     /// <summary>
     /// シーン遷移の本体。
-    /// フェードアウト → シーンロード（最低表示時間待ち含む） → フェードイン、の順で処理する。
+    /// 暗転 → シーンロード（最低表示時間待ち含む） → 裏で切り替え → ローディング表示を消す → 暗転を解く、の順で処理する。
     /// </summary>
     /// <param name="sceneName">読み込むシーン名（Build Settingsに追加されていること）</param>
     /// <param name="useFade">フェードイン・アウトを使うか</param>
     /// <param name="useLoadingIndicator">ロード中にLoading Indicatorを表示するか。falseならLoading Indicatorが割り当て済みでも一切触らない</param>
-    /// <param name="fadeOutDuration">フェードアウトの秒数。0未満を指定するとデフォルト値を使用</param>
-    /// <param name="fadeInDuration">フェードインの秒数。0未満を指定するとデフォルト値を使用</param>
+    /// <param name="fadeOutDuration">暗転する秒数。0未満を指定するとデフォルト値を使用</param>
+    /// <param name="fadeInDuration">暗転を解く秒数。0未満を指定するとデフォルト値を使用</param>
     /// <param name="progress">ロード進捗(0〜1)の通知先。不要ならnullでよい</param>
     /// <param name="minimumDuration">ロードが一瞬で終わっても、最低この秒数はロード扱いにする</param>
     /// <param name="ct">キャンセルトークン</param>
@@ -156,6 +178,7 @@ public class SceneLoader : MonoBehaviour
             }
 
             // フェードで画面が覆われている（＝見えていない）間だけNow Loading的な表示を出す
+            // （LoadingScreenが付いていれば、表示された瞬間に自動でふわっと現れる）
             if (useLoadingIndicator) ShowLoadingIndicator();
 
             var op = SceneManager.LoadSceneAsync(sceneName);
@@ -199,12 +222,41 @@ public class SceneLoader : MonoBehaviour
 
             progress?.Report(1.0f);
 
+            // 画面が覆われたまま（暗いまま）、裏で新しいシーンに切り替える
             op.allowSceneActivation = true;
             await UniTask.WaitUntil(() => op.isDone, cancellationToken: linkedCt);
 
-            // 新しいシーンの読み込みが終わったので、フェードインで見せる前にNow Loading表示を消す
-            if (useLoadingIndicator) HideLoadingIndicator();
+            if (useLoadingIndicator)
+            {
+                // 読み込み完了後、文字を見せるために少し止める
+                if (_completeHoldSeconds > 0f)
+                {
+                    await UniTask.Delay(
+                        TimeSpan.FromSeconds(_completeHoldSeconds),
+                        ignoreTimeScale: true,
+                        cancellationToken: linkedCt);
+                }
 
+                if (_loadingScreen != null)
+                {
+                    // 1) 文字だけがフェードアウト
+                    await _loadingScreen.FadeOutTextAsync(_completeFadeSeconds, linkedCt);
+                    // 2) フェードオーバーレイ（黒）が濃くなって、ローディング画面全体を覆う
+                    await _loadingScreen.FadeInOverlayAsync(_overlayFadeSeconds, linkedCt);
+                    // 3) ローディング画面そのものがフェードアウト
+                    await _loadingScreen.FadeOutAsync(_loadingScreenFadeSeconds, linkedCt);
+                }
+                else
+                {
+                    Debug.LogWarning(
+                        "[SceneLoader] Loading Indicator に LoadingScreen が付いていないため、" +
+                        "文字はフェードせず即座に消えます");
+                }
+
+                HideLoadingIndicator();
+            }
+
+            // ローディング画面が消えたら、暗転を解いて次の画面を見せる
             if (useFade)
             {
                 float duration = fadeInDuration < 0f ? _defaultFadeInDuration : fadeInDuration;
@@ -228,6 +280,7 @@ public class SceneLoader : MonoBehaviour
 
     // フェードアウト/インを単体で呼べるようにpublicにしている。
     // durationに0未満を指定するとデフォルト値を使う。
+    // （このクラスでは FadeOut = 画面が暗くなる、FadeIn = 暗いのが消えて画面が見える）
     //
     // どちらも「今の明るさ」から始める。すでに暗い画面でFadeOutを呼んだり、明るい画面でFadeInを
     // 呼んだりしても、いったん逆側に戻ってちらつくことがないようにするため。
